@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="colorBackground">#094941</color>
+    <color name="colorWhite">#FAF8F8</color>
+    <color name="colorPressed">#CBDDDC</color>
+    <color name="color_rwd">#FFC107</color>
+    <color name="color_rwd_pressed">#CCAA44</color>
+    <color name="backgroundColor">#FFFFFF</color>
+    <color name="textColor">#A8A5A5</color>
+    <color name="backgroundFirst">#FFFFFF</color>
+    <color name="backgroundSecond">#A1E655</color>
+    <color name="backgroundThird">#FAE339</color>
+    <color name="backgroundForth">#F44336</color>
+    <color name="backgroundFirstPressed">#CCCCCC</color>
+    <color name="backgroundSecondPressed">#85E027</color>
+    <color name="backgroundThirdPressed">#F5D606</color>
+    <color name="backgroundForthPressed">#F81205</color>
+
+</resources>
