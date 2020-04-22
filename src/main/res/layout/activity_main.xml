@@ -52,18 +52,7 @@
         app:layout_constraintTop_toTopOf="@id/secondBtn"
         app:layout_constraintVertical_bias="0.0" />
 
-    <Button
-        android:id="@+id/histBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="8dp"
-        android:text="@string/history_text"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintBottom_toBottomOf="@id/startServiceBtn"
-        app:layout_constraintRight_toRightOf="@id/thirdBtn"
-        app:layout_constraintTop_toTopOf="@id/startServiceBtn"
-        app:layout_constraintVertical_bias="0.0" />
-
+    <!--
     <Button
         android:id="@+id/startServiceBtn"
         android:layout_width="wrap_content"
@@ -89,6 +78,27 @@
         app:layout_constraintTop_toTopOf="@id/startServiceBtn"
         app:layout_constraintVertical_bias="0.0" />
 
+        -->
+
+    <Button
+        android:id="@+id/adminBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/admin_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintRight_toLeftOf="@id/histBtn"
+        app:layout_constraintBottom_toBottomOf="@id/histBtn"/>
+
+    <Button
+        android:id="@+id/histBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="@string/history_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintRight_toRightOf="@id/thirdBtn"
+        app:layout_constraintTop_toBottomOf="@id/thirdBtn" />
+
     <Button
         android:id="@+id/forthBtn"
         android:layout_width="wrap_content"
@@ -110,6 +120,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="0"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button1"
         app:layout_constraintLeft_toLeftOf="@id/button1" />
 
@@ -120,6 +131,7 @@
         android:layout_marginLeft="164dp"
         android:layout_marginTop="124dp"
         android:text="7"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintLeft_toRightOf="@id/forthBtn"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -128,6 +140,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="8"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toTopOf="@id/button7"
         app:layout_constraintRight_toLeftOf="@id/button9"
         app:layout_constraintLeft_toRightOf="@id/button7"
@@ -139,6 +152,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="9"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintLeft_toRightOf="@id/button8"
         app:layout_constraintTop_toTopOf="@id/button7"
         app:layout_constraintBottom_toBottomOf="@id/button7"/>
@@ -148,6 +162,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="4"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button7"
         app:layout_constraintLeft_toLeftOf="@id/button7"
         tools:layout_editor_absoluteY="88dp" />
@@ -157,6 +172,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="5"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button8"
         app:layout_constraintLeft_toLeftOf="@id/button8" />
 
@@ -165,6 +181,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="6"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button9"
         app:layout_constraintLeft_toLeftOf="@id/button9" />
 
@@ -174,6 +191,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="1"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button4"
         app:layout_constraintLeft_toLeftOf="@id/button4"/>
 
@@ -182,6 +200,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="2"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button5"
         app:layout_constraintLeft_toLeftOf="@id/button5" />
 
@@ -190,17 +209,32 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="3"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintTop_toBottomOf="@id/button6"
         app:layout_constraintLeft_toLeftOf="@id/button6" />
 
     <Button
         android:id="@+id/deleteBtn"
-        android:layout_width="0dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:text="@string/enter_text"
+        android:background="@drawable/key_btn_state"
         app:layout_constraintBottom_toBottomOf="@id/button0"
         app:layout_constraintLeft_toRightOf="@id/button0"
+        app:layout_constraintRight_toRightOf="@id/button8" />
+
+    <Button
+        android:id="@+id/minusBtn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:text="@string/minus_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:background="@drawable/btn_minus_state"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="@id/button0"
+        app:layout_constraintLeft_toRightOf="@id/deleteBtn"
         app:layout_constraintRight_toRightOf="@id/button9" />
+
 
     <TextView
         android:id="@+id/confirmTxt"
@@ -211,6 +245,7 @@
         android:background="@color/colorWhite"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/colorBackground"
+        android:layout_marginBottom="4dp"
         app:layout_constraintBottom_toTopOf="@id/button7"
         app:layout_constraintLeft_toRightOf="@id/numberTxt"
         app:layout_constraintRight_toRightOf="@id/button9" />
@@ -223,7 +258,7 @@
         android:background="@color/colorWhite"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/colorBackground"
-        app:layout_constraintBottom_toTopOf="@id/button7"
+        app:layout_constraintTop_toTopOf="@id/confirmTxt"
         app:layout_constraintRight_toLeftOf="@id/confirmTxt"
         app:layout_constraintLeft_toLeftOf="@id/button7" />
 
