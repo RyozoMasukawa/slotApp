@@ -2,11 +2,15 @@ package com.example.wasacon.slotapp
 
 import android.graphics.Color
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.realm.RealmResults
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class CustomRecyclerViewAdapter(realmResults: RealmResults<ResultData>) : RecyclerView.Adapter<ViewHolder>(){
 
@@ -31,6 +35,5 @@ class CustomRecyclerViewAdapter(realmResults: RealmResults<ResultData>) : Recycl
         holder.postalText?.text = "${resultData?.postal}"
         holder.addressText?.text = "${resultData?.address}"
         holder.nameText?.text = "${resultData?.name}"
-        holder.itemView.setBackgroundColor(if (position % 2 == 0) Color.LTGRAY else Color.WHITE)
     }
 }

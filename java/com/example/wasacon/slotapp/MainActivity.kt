@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import io.realm.Realm
+import io.realm.Sort
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_main.*
@@ -87,6 +88,17 @@ class MainActivity : AppCompatActivity() {
                             resultData.address = FORTH
                             resultData.name = FORTH
                             resultData.postal = FORTH
+
+                            val maxBallId = realm.where<BallData>().max("id")
+
+                            val previousNumBalls = realm.where<BallData>()
+                                .sort("dateTime", Sort.DESCENDING)
+                                .findFirst()?.numBalls ?: 1
+
+                            val nextBallId = (maxBallId?.toLong() ?: 0L) + 1L
+                            val ballData = realm.createObject<BallData>(nextBallId)
+                            ballData.numBalls = previousNumBalls - 1
+                            ballData.dateTime = Date()
                         }
                     }
 
@@ -113,6 +125,18 @@ class MainActivity : AppCompatActivity() {
                             resultData.address = MINUS
                             resultData.name = MINUS
                             resultData.postal = MINUS
+
+                            val maxBallId = realm.where<BallData>().max("id")
+
+                            val previousNumBalls = realm.where<BallData>()
+                                .sort("dateTime", Sort.DESCENDING)
+                                .findFirst()?.numBalls ?: 1
+
+                            val nextBallId = (maxBallId?.toLong() ?: 0L) + 1L
+                            val ballData = realm.createObject<BallData>(nextBallId)
+                            ballData.numBalls = previousNumBalls + 1
+                            ballData.dateTime = Date()
+
                         }
                     }
 
@@ -223,7 +247,7 @@ class MainActivity : AppCompatActivity() {
 
         //履歴
         histBtn.setOnClickListener {
-            val intent = Intent(this, DataActivity::class.java)
+            val intent = Intent(this, HistoryActivity::class.java)
             startActivity(intent)
         }
 

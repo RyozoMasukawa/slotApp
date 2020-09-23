@@ -1,17 +1,20 @@
 package com.example.wasacon.slotapp
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.text.format.DateFormat
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.FragmentActivity
 import io.realm.Realm
-import io.realm.RealmQuery
 import io.realm.RealmResults
-import io.realm.Sort
+import io.realm.kotlin.createObject
+import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_setting.*
 import java.io.BufferedWriter
 import java.io.File
@@ -21,9 +24,10 @@ import java.lang.Exception
 import java.nio.charset.StandardCharsets
 import java.util.*
 
-class SettingActivity : AppCompatActivity() {
+class SettingActivity : FragmentActivity() {
     private lateinit var realm : Realm
     private val tag : String = "Writing File:"
+    private var numBallsAppreared : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,9 +56,9 @@ class SettingActivity : AppCompatActivity() {
         }
 
         //戻る
-        returnBtn.setOnClickListener {
+        /*returnBtn.setOnClickListener {
             finish()
-        }
+        }*/
 
         for (i in 0..2) {
             buttons[i].setOnClickListener {
@@ -67,7 +71,34 @@ class SettingActivity : AppCompatActivity() {
             val intentConfirm = Intent(this, ConfirmActivity::class.java)
             startActivity(intentConfirm)
         }
+
+        //玉追加
+        addBtn.setOnClickListener {
+            setNumBallsAlert()
+        }
+
+        depositBtn.setOnClickListener {
+            setAccountAlert()
+        }
+
+        numBallsAppreared = 0
+        for (i in 0..(arrayOfRankQuery.size - 1)) {
+            if (i == arrayOfRankQuery.size - 1) {
+                numBallsAppreared -= arrayOfRankQuery[i]?.count() as Int
+            } else {
+                numBallsAppreared += arrayOfRankQuery[i]?.count() as Int
+            }
+        }
     }
+
+    /*
+    override fun onDialogPositiveClick(dialog: DialogFragment) {
+        val input = dialog.view?.findViewById<EditText>(R.id.numBallsEdit)
+        if (!input?.text.isNullOrEmpty()) {
+            this.numBalls += input?.text.toString().toInt()
+        }
+        Log.d("numBalls = ", numBalls.toString())
+    }*/
 
     //集計したcsvデータの書き込み
     private fun writeFileGeneral(results: Array<RealmResults<ResultData>?>) {
@@ -93,7 +124,11 @@ class SettingActivity : AppCompatActivity() {
                 bw.write("\n")
 
                 if (results != null) {
+                    var sumOfResult = 0L
+                    var sumOfCount = 0
                     for (result in results) {
+                        sumOfResult += result?.sum("result") as Long
+
                         i++
 
                         if(i == 5) {
@@ -123,11 +158,12 @@ class SettingActivity : AppCompatActivity() {
 
                         }
                     }
+                    bw.write("合計," + numBallsAppreared.toString() + "," + sumOfResult.toString() + ",,\n")
 
                     bw.flush()
                 }
                 Log.d(tag, "Writing " + file.toString() + " completed!")
-                showToast("CSVデータ「" + filename + "」が保存されました！")
+                showToast("CSVファイル「" + filename + "」が保存されました！")
             } catch (e: Exception) {
                 Log.d(tag, "Failed in writing file")
                 e.printStackTrace()
@@ -188,6 +224,137 @@ class SettingActivity : AppCompatActivity() {
 
     private fun showToast(msg : String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setNumBallsAlert() {
+        val editText = EditText(this)
+        val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT)
+        editText.setLayoutParams(layoutParams)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.add_balls))
+            .setView(editText)
+            .setPositiveButton(R.string.confirm_text) { dialog, which ->
+                Toast.makeText(applicationContext, "num = ${editText.text.toString()}",
+                    Toast.LENGTH_LONG).show()
+                val numBalls = editText.text.toString().toInt()
+                Log.d("numBalls = ", numBalls.toString())
+                updateNumBalls(numBalls)
+            }
+            .setNegativeButton(R.string.cancel_text) { dialog, which ->
+                dialog.cancel()
+            }
+            .show()
+    }
+
+    private fun setAccountAlert() {
+        val editText = EditText(this)
+        editText.hint = "¥"
+        val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT)
+        editText.setLayoutParams(layoutParams)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.add_balls))
+            .setView(editText)
+            .setPositiveButton(R.string.deposit) { dialog, which ->
+                Toast.makeText(applicationContext, "num = ${editText.text.toString()}",
+                    Toast.LENGTH_LONG).show()
+                val numBalls = editText.text.toString().toInt()
+                Log.d("numBalls = ", numBalls.toString())
+                updateAccount(numBalls)
+            }
+            .setNegativeButton(R.string.cancel_text) { dialog, which ->
+                dialog.cancel()
+            }
+            .show()
+
+    }
+
+    private fun updateNumBalls(num : Int) {
+        val maxId = realm.where<BallData>().max("id")?.toLong()
+
+        if (maxId != null) {
+            val previouBallData = realm.where(BallData::class.java)
+                .equalTo("id", maxId).findFirst()
+
+            if (previouBallData != null) {
+                val previousNumBalls = previouBallData?.numBalls
+
+                if (num + previousNumBalls >= 0) {
+                    realm.executeTransaction {
+                        val maxId = realm.where<BallData>().max("id")
+                        val nextId = (maxId?.toLong() ?: 0L) + 1L
+                        val ballData = realm.createObject<BallData>(nextId)
+                        ballData.dateTime = Date()
+                        ballData.numBalls = num + previousNumBalls
+                    }
+                } else {
+                    showToast("エラー！　玉数がマイナスになってしまいます！")
+                }
+                Log.d("numBalls = ", (num + previousNumBalls).toString())
+            }
+        } else {
+            if (num >= 0) {
+                realm.executeTransaction {
+                    val maxId = realm.where<BallData>().max("id")
+                    val nextId = (maxId?.toLong() ?: 0L) + 1L
+                    val ballData = realm.createObject<BallData>(nextId)
+                    ballData.dateTime = Date()
+                    ballData.numBalls = num
+                }
+            } else {
+                showToast("エラー！　玉数がマイナスになってしまいます！")
+            }
+            Log.d("numBalls = ", num.toString())
+        }
+    }
+
+    private fun updateAccount(deposit : Int) {
+        val maxId = realm.where<AccountData>().max("id")?.toLong()
+
+        if (maxId != null) {
+            val previouAccountData = realm.where(BallData::class.java)
+                .equalTo("id", maxId).findFirst()
+
+            if (previouAccountData != null) {
+                val previousBalance = previouAccountData?.numBalls
+
+                if (deposit + previousBalance >= 0) {
+                    realm.executeTransaction {
+                        val maxId = realm.where<AccountData>().max("id")
+                        val nextId = (maxId?.toLong() ?: 0L) + 1L
+                        val accountData = realm.createObject<AccountData>(nextId)
+                        accountData.dateTime = Date()
+                        accountData.balance = deposit + previousBalance
+                    }
+                } else {
+                    showToast("エラー！　残高がマイナスになってしまいます！")
+                }
+                Log.d("Current Balance : ¥", (deposit + previousBalance).toString())
+            }
+        } else {
+            if (deposit >= 0) {
+                realm.executeTransaction {
+                    val maxId = realm.where<AccountData>().max("id")
+                    val nextId = (maxId?.toLong() ?: 0L) + 1L
+                    val accountData = realm.createObject<AccountData>(nextId)
+                    accountData.dateTime = Date()
+                    accountData.balance = deposit
+                }
+            } else {
+                showToast("エラー！　残高がマイナスになってしまいます！")
+            }
+            Log.d("Current Balance : ¥", deposit.toString())
+        }
+    }
+
+    private fun getCurrentNumBalls() : Int?{
+        val maxId = realm.where<BallData>().max("id")?.toLong()
+        if (maxId != null) {
+            return realm.where<BallData>().equalTo("id", maxId)?.findFirst()?.numBalls
+
+        }
+        return 0
     }
 
     override fun onDestroy() {

@@ -1,5 +1,6 @@
 package com.example.wasacon.slotapp
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -21,6 +22,10 @@ class ConfirmActivity : AppCompatActivity() {
                     .findAll()
                     .deleteAllFromRealm()
             }
+
+            val pref = getSharedPreferences(getString(R.string.num_balls), Context.MODE_PRIVATE)
+            val editor = pref.edit()
+            editor.putInt("numBalls", 0).apply()
 
             showToast("All data deleted!")
 

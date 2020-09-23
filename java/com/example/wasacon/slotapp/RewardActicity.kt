@@ -1,7 +1,6 @@
 package com.example.wasacon.slotapp
 
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,19 +8,14 @@ import android.view.View
 import android.widget.ImageView
 import kotlinx.android.synthetic.main.activity_reward_acticity.*
 import java.util.*
-import kotlin.concurrent.schedule
 import kotlin.random.Random
 import android.os.Looper
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.media.MediaPlayer
 import android.os.Handler
-import android.widget.Toast
 import io.realm.Realm
+import io.realm.Sort
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
-import java.sql.Time
-
 
 
 class RewardActicity : AppCompatActivity() {
@@ -46,8 +40,11 @@ class RewardActicity : AppCompatActivity() {
 
         editBtn.visibility = View.INVISIBLE
         praiseTxt.visibility = View.INVISIBLE
+        imageView2.visibility = View.INVISIBLE
 
-        realm = Realm.getDefaultInstance()
+
+
+                realm = Realm.getDefaultInstance()
 
         val drawables : Array<Int> = arrayOf(R.drawable.w0
             , R.drawable.w1
@@ -72,7 +69,7 @@ class RewardActicity : AppCompatActivity() {
         rewardNo = intent.getIntExtra("no", 0)
         returnBtn.visibility = View.INVISIBLE
 
-        startBtn.setOnClickListener {
+        depositBtn.setOnClickListener {
             var min : Int = 0
             var max : Int = 100000
             var div : Int = 1
@@ -99,18 +96,16 @@ class RewardActicity : AppCompatActivity() {
             }
             value = (Random.nextInt(min, max) / div) * div
 
-            val digits : List<Int> = getDigits(value)
+            Log.d("¥", value.toString())
 
-            showResult(digits, drawables, imageViews, value)
+            showResult(drawables, imageViews, value)
             //showToast("結果を保存しました！！")
-            startBtn.visibility = View.INVISIBLE
+            depositBtn.visibility = View.INVISIBLE
         }
 
         returnBtn.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
-            returnBtn.visibility = View.INVISIBLE
             startActivity(intent)
-            startBtn.visibility = View.VISIBLE
             c6.release()
             fanfare.release()
         }
@@ -128,7 +123,7 @@ class RewardActicity : AppCompatActivity() {
     }
 
     private fun getDigits(value : Int) : List<Int> {
-        var ls : MutableList<Int> = mutableListOf()
+        val ls : MutableList<Int> = mutableListOf()
         var x : Int = value
         while (x > 0) {
             ls.add(x % 10)
@@ -137,7 +132,8 @@ class RewardActicity : AppCompatActivity() {
         return  ls.toList()
     }
 
-    private fun showResult(resultList: List<Int>, drawables : Array<Int>, imageViews : Array<ImageView>, resultValue : Int) {
+    private fun showResult(drawables : Array<Int>, imageViews : Array<ImageView>, resultValue : Int) {
+        val resultList: List<Int> = getDigits(resultValue)
 
         val handler = Handler(Looper.getMainLooper())
 
@@ -164,16 +160,15 @@ class RewardActicity : AppCompatActivity() {
 
             override fun run() {
                 cnt++
-
                 if (cnt < 25) {
                     for (j in 0..(imageViews.size - 1)) {
-                        imageViews[j].setImageResource(drawables[Random.nextInt(0, 9)])
+                        imageViews[j].setImageResource(drawables[(cnt + j) % 10])
                     }
                     c6.seekTo(0)
                     c6.start()
                     handler.postDelayed(this, 100)
                 } else {
-                    imageViews[i].setImageResource(drawables[Random.nextInt(0, 9)])
+                    imageViews[i].setImageResource(drawables[(cnt + i) % 10])
                     handler.post(showResultImages)
                 }
             }
@@ -187,10 +182,14 @@ class RewardActicity : AppCompatActivity() {
         val handler = Handler()
 
         val imageTick = object : Runnable {
+            var cnt = 0
+
             override fun run() {
-                for (j in 0..i) {
-                    imageViews[j].setImageResource(drawables[Random.nextInt(0, 9)])
+                var count = 0
+                for (j in 0..(i - 1)) {
+                    imageViews[j].setImageResource(drawables[count++])
                 }
+                imageViews[i].setImageResource(drawables[resultList[cnt % resultList.size] % drawables.size])
             }
         }
 
@@ -198,7 +197,8 @@ class RewardActicity : AppCompatActivity() {
             var cnt = 0
             override fun run() {
                 if (cnt < resultList.size) {
-                    handler.postDelayed(imageTick, 10)
+                    imageTick.cnt = cnt
+                    handler.postDelayed(imageTick, 100)
                     imageViews[i].setImageResource(drawables[resultList[cnt]])
                     i--
                     cnt++
@@ -213,6 +213,7 @@ class RewardActicity : AppCompatActivity() {
                     }
                     fanfare.seekTo(0)
                     fanfare.start()
+                    imageView2.visibility = View.VISIBLE
 
                     returnBtn.visibility = View.VISIBLE
                     praiseTxt.visibility = View.VISIBLE
@@ -245,6 +246,16 @@ class RewardActicity : AppCompatActivity() {
             resultData.address = THIRD
             resultData.name = THIRD
             resultData.postal = THIRD
+
+            val maxBallId = realm.where<BallData>().max("id")
+            val previousNumBalls = realm.where<BallData>()
+                .sort("dateTime", Sort.DESCENDING)
+                .findFirst()?.numBalls ?: 1
+
+            val nextBallId = (maxBallId?.toLong() ?: 0L) + 1L
+            val ballData = realm.createObject<BallData>(nextBallId)
+            ballData.numBalls = previousNumBalls - 1
+            ballData.dateTime = Date()
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import io.realm.Realm
+import io.realm.Sort
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_edit.*
@@ -41,6 +42,16 @@ class EditActivity : AppCompatActivity() {
                 if (!postalEdit.text.isNullOrEmpty()) {
                     resultData.postal = postalEdit.text.toString()
                 }
+
+                val maxBallId = realm.where<BallData>().max("id")
+                val previousNumBalls = realm.where<BallData>()
+                    .sort("dateTime", Sort.DESCENDING)
+                    .findFirst()?.numBalls ?: 1
+
+                val nextBallId = (maxBallId?.toLong() ?: 0L) + 1L
+                val ballData = realm.createObject<BallData>(nextBallId)
+                ballData.numBalls = previousNumBalls - 1
+                ballData.dateTime = Date()
             }
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
