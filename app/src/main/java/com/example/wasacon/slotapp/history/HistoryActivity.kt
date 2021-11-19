@@ -135,7 +135,7 @@ class HistoryActivity : AppCompatActivity() {
                     .findAll()
                     .where()
                     .lessThanOrEqualTo("dateTime", dStartEnd.second)
-                    .sort("dateTime", Sort.DESCENDING)
+                    .sort("dateTime", Sort.ASCENDING)
                     .findFirst()
                     ?.numBalls ?: 0
 

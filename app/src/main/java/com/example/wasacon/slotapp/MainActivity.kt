@@ -91,7 +91,10 @@ class MainActivity : AppCompatActivity() {
 
         //四等
         forthBtn.setOnClickListener {
-            if (getBalance(dPair) <= 0) {
+            val count = confirmTxt.text.toString().toInt()
+
+            if (!isMinusBtnClicked && getBalance(dPair) - 50 * count  <= 0) {
+
                 val inCorrect = MediaPlayer.create(this, R.raw.incorrect1)
                 inCorrect.seekTo(0)
                 inCorrect.start()
@@ -100,7 +103,6 @@ class MainActivity : AppCompatActivity() {
             }
             if (!confirmTxt.text.equals("0")) {
                 if (!isMinusBtnClicked) {
-                    val count = confirmTxt.text.toString().toInt()
 
                     /*Log.d("Number of 4th:", count.toString())
                     if (confirmTxt.text.equals("0")) {
@@ -113,10 +115,11 @@ class MainActivity : AppCompatActivity() {
 
                     //for (i in 1..count) {
                     realm.executeTransaction {
+                        val date = Date()
                         val maxId = realm.where<FourthData>().max("id")
                         val nextId = (maxId?.toLong() ?: 0L) + 1L
                         val fourthData = realm.createObject<FourthData>(nextId)
-                        fourthData.dateTime = Date()
+                        fourthData.dateTime = date
                         fourthData.result = 50 * count
                         fourthData.count = count
 
@@ -129,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                         val nextBallId = (maxBallId?.toLong() ?: 0L) + 1L
                         val ballData = realm.createObject<BallData>(nextBallId)
                         ballData.numBalls = previousNumBalls - count
-                        ballData.dateTime = Date()
+                        ballData.dateTime = date
 
                         //*残高
                         val maxAccountId = realm.where<AccountData>().max("id")
@@ -152,12 +155,9 @@ class MainActivity : AppCompatActivity() {
                         val nextAccountId = (maxAccountId?.toLong() ?: 0L) + 1L
                         val accountData = realm.createObject<AccountData>(nextAccountId)
                         accountData.balance = mostRecentBalance - 50 * count
-                        accountData.dateTime = Date()
+                        accountData.dateTime = date
                     }
-                    //}
-
                 } else {
-                    val count = confirmTxt.text.toString().toInt()
 
                     Log.d("Number of 4th:", count.toString())
                     /*if (confirmTxt.text.equals("0")) {
@@ -298,7 +298,7 @@ class MainActivity : AppCompatActivity() {
 
         //一等
         firstBtn.setOnClickListener {
-            if (getBalance(dPair) <= 0) {
+            if (getBalance(dPair) <= FIRST_MIN) {
                 val inCorrect = MediaPlayer.create(this, R.raw.incorrect1)
                 inCorrect.seekTo(0)
                 inCorrect.start()
@@ -315,7 +315,7 @@ class MainActivity : AppCompatActivity() {
 
         //二等
         secondBtn.setOnClickListener {
-            if (getBalance(dPair) <= 0) {
+            if (getBalance(dPair) <= SECOND_MIN) {
                 val inCorrect = MediaPlayer.create(this, R.raw.incorrect1)
                 inCorrect.seekTo(0)
                 inCorrect.start()
@@ -331,7 +331,7 @@ class MainActivity : AppCompatActivity() {
 
         //三等
         thirdBtn.setOnClickListener {
-            if (getBalance(dPair) <= 0) {
+            if (getBalance(dPair) <= THIRD_MIN) {
                 val inCorrect = MediaPlayer.create(this, R.raw.incorrect1)
                 inCorrect.seekTo(0)
                 inCorrect.start()

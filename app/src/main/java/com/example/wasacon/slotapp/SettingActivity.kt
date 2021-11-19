@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentActivity
 import com.example.wasacon.slotapp.realmObjects.AccountData
 import com.example.wasacon.slotapp.realmObjects.BallData
+import com.example.wasacon.slotapp.realmObjects.FourthData
 import com.example.wasacon.slotapp.realmObjects.ResultData
 import io.realm.Realm
 import io.realm.RealmResults
@@ -28,11 +29,13 @@ import java.lang.Exception
 import java.lang.NumberFormatException
 import java.nio.charset.StandardCharsets
 import java.util.*
+import kotlin.system.exitProcess
 
 class SettingActivity : FragmentActivity() {
     private lateinit var realm : Realm
     private val tag : String = "Writing File:"
     private var numBallsAppreared : Int = 0
+    private final val NUM_RANKS : Int = 4
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,21 +46,34 @@ class SettingActivity : FragmentActivity() {
         val buttons : Array<Button> = arrayOf(firstExcelBtn, secondExcelBtn, thirdExcelBtn)
 
         //等ごとに分けたデータベース取得
-        val arrayOfRankQuery : Array<RealmResults<ResultData>?> = arrayOfNulls(5)
+        val arrayOfRankQuery : Array<RealmResults<ResultData>?> = arrayOfNulls(NUM_RANKS)
 
-        for (i : Int in 0..3) {
+        val dPair = DateAdministrator.bindDay(Date())
+
+        for (i : Int in 0..(NUM_RANKS-1)) {
             arrayOfRankQuery[i] = realm.where(ResultData::class.java)
-                .equalTo("rank", i + 1).findAll()
+                .equalTo("rank", i + 1)
+                .findAll()
+                .where()
+                .greaterThanOrEqualTo("dateTime", dPair.first)
+                .findAll()
+                .where()
+                .lessThanOrEqualTo("dateTime", dPair.second)
+                .findAll()
             Log.d("count = ", arrayOfRankQuery[i]?.count().toString())
         }
 
-        //マイナスのデータベース取得
-        arrayOfRankQuery[4] = realm.where(ResultData::class.java)
-            .equalTo("rank", -4 as Int).findAll()
+        //四等のデータベース取得
+        val fourthData = realm.where(FourthData::class.java)
+            .greaterThanOrEqualTo("dateTime", dPair.first)
+            .findAll()
+            .where()
+            .lessThanOrEqualTo("dateTime", dPair.second)
+            .findAll()
 
-        //集計データ取得
+        //集計データ書き込み
         payOffBtn.setOnClickListener {
-            writeFileGeneral(arrayOfRankQuery)
+            writeFileGeneral(arrayOfRankQuery, fourthData)
         }
 
         //戻る
@@ -86,15 +102,6 @@ class SettingActivity : FragmentActivity() {
         depositBtn.setOnClickListener {
             setAccountAlert(false)
         }
-
-        numBallsAppreared = 0
-        for (i in 0..(arrayOfRankQuery.size - 1)) {
-            if (i == arrayOfRankQuery.size - 1) {
-                numBallsAppreared -= arrayOfRankQuery[i]?.count() as Int
-            } else {
-                numBallsAppreared += arrayOfRankQuery[i]?.count() as Int
-            }
-        }
     }
 
     /*
@@ -107,7 +114,7 @@ class SettingActivity : FragmentActivity() {
     }*/
 
     //集計したcsvデータの書き込み
-    private fun writeFileGeneral(results: Array<RealmResults<ResultData>?>) {
+    private fun writeFileGeneral(results_except_fourth: Array<RealmResults<ResultData>?>, fourthData: RealmResults<FourthData>? = null) {
         val path : File? = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
         val CSV_HEADER = "ランク,本数,金額,平均"
         lateinit var file : File
@@ -129,10 +136,12 @@ class SettingActivity : FragmentActivity() {
                 bw.write(CSV_HEADER)
                 bw.write("\n")
 
-                if (results != null) {
+                if (results_except_fourth != null) {
                     var sumOfResult = 0L
-                    var sumOfCount = 0
-                    for (result in results) {
+
+                    numBallsAppreared = 0
+
+                    for (result in results_except_fourth) {
                         sumOfResult += result?.sum("result") as Long
 
                         i++
@@ -145,20 +154,21 @@ class SettingActivity : FragmentActivity() {
                             bw.write(i.toString()  + "等")
                             bw.write(",")
                             if (i != 4) {
+                                numBallsAppreared += result.count()
                                 bw.write(result.count().toString())
                                 bw.write(",")
                                 bw.write(result.sum("result").toString())
                                 bw.write(",")
                                 bw.write(result.average("result").toString())
                                 bw.write("\n")
-                            } else {
-                                bw.write((result.count() - results?.get(4)?.count() as Int).toString())
+                            } else if (fourthData != null && i == 4){
+                                numBallsAppreared += fourthData.sum("count").toInt()
+
+                                bw.write(fourthData.sum("count").toString())
                                 bw.write(",")
-                                val sumOf4 = (result.sum("result") as Long + (results?.get(4)?.sum("result") as Long
-                                    ?: 0L)).toString()
-                                bw.write(sumOf4)
+                                bw.write(fourthData.sum("result").toString())
                                 bw.write(",")
-                                bw.write("50")
+                                bw.write(fourthData.average("result").toString())
                                 bw.write("\n")
                             }
 
@@ -297,10 +307,6 @@ class SettingActivity : FragmentActivity() {
 
         val numBalls = num.toInt()
 
-        val maxId = realm.where<BallData>().max("id")?.toLong()
-
-        val previousBallData = realm.where(BallData::class.java)
-            .equalTo("id", maxId).findFirst()
 
 
         /*
@@ -315,23 +321,38 @@ class SettingActivity : FragmentActivity() {
             .findFirst()
         */
 
-        val previousNumBalls = previousBallData?.numBalls ?: 0
 
-        if (numBalls + previousNumBalls >= 0) {
-            realm.executeTransaction {
-                val maxId = realm.where<BallData>().max("id")
-                val nextId = (maxId?.toLong() ?: 0L) + 1L
-                val ballData = realm.createObject<BallData>(nextId)
+        realm.executeTransaction {
+            val firstData : BallData? = realm.where(BallData::class.java).findFirst()
+            if (firstData == null) {
+                val ballData : BallData = realm.createObject<BallData>(0)
                 ballData.dateTime = Date()
-                ballData.numBalls = numBalls + previousNumBalls
-            }
-            Toast.makeText(applicationContext, "${num.toString()}玉追加しました！",
-                Toast.LENGTH_LONG).show()
 
-        } else {
-            showToast("エラー！　玉数がマイナスになってしまいます！")
+                if (numBalls >= 0) {
+                    ballData.numBalls = numBalls
+                } else {
+                    showToast("エラー！　玉数がマイナスになってしまいます！")
+                }
+            } else {
+                val maxId = realm.where<BallData>().max("id")
+
+                val previousBallData : BallData? = realm.where(BallData::class.java)
+                    .equalTo("id", maxId?.toInt()).findFirst()
+                val previousNumBalls = previousBallData?.numBalls ?: 0
+
+                if (numBalls + previousNumBalls < 0) {
+                    showToast("エラー！　玉数がマイナスになってしまいます！")
+                } else {
+                    val nextId = (maxId?.toLong() ?: 0L) + 1L
+                    val ballData = realm.createObject<BallData>(nextId)
+                    ballData.dateTime = Date()
+                    ballData.numBalls = numBalls + previousNumBalls
+                    Log.d("numBalls = ", (num + previousNumBalls).toString())
+                }
+            }
         }
-        Log.d("numBalls = ", (num + previousNumBalls).toString())
+        Toast.makeText(applicationContext, "${num.toString()}玉追加しました！",
+            Toast.LENGTH_LONG).show()
     }
 
     private fun updateAccount(depo : String) {
